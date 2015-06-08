@@ -66,3 +66,16 @@ def toLST (y,m,d,h,mn,s,dir,deg):
 # h:m:s to hr (dec)
 
 # eq to horiz coord conversion
+def eq2hor(gmt, rA, lat, dec):
+    # [alt, az] = eq2hor(gmt, rA, lat, dec)
+    #Converts to alt, az coordinates given Greenwich Mean Time gmt, right ascension tuple
+    #rA (hours, minutes, seconds), latitude lat, and declination in decimal degrees dec.
+    #CYC 6/08/15
+    
+   hourAng = hourAng(gmt, rA) #calculates hour angle
+   deg_hourAng=15*hourAng #converts hour angle to degrees
+   sinAlt=sin(dec)sin(lat) + cos(dec)cos(lat)cos(deg_hourAng)
+   alt = np.arcsin(sinAlt) #outputs altitude
+   cosAz = (sin(dec)-sin(lat)sin(alt))/(cos(lat)cos(alt))
+   az = np.arccos(cosAz) #outputs azimuth
+   return (alt, az) #returns altitude, azimuth as a tuple
