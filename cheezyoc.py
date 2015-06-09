@@ -10,7 +10,7 @@ def hms2dday(d, h, m, s):
     dday = d + hour + min + sec
     return(dday)
     
-def ra2deg(rAtuple)
+def ra2deg(rAtuple):
     ''' [RAdeg] = ra2deg(rAtuple)
     Returns decimal degree form of right ascension RAdeg given rAtuple=(hour, minute,
     second)
@@ -20,7 +20,7 @@ def ra2deg(rAtuple)
     RAdeg = h*(360./24) + m*(360./(24.*60.)) + s*(360./(24.*60.*60.))
     return (RAdeg)    
     
-def dec2deg(dectuple)
+def dec2deg(dectuple):
     ''' [DECdeg] = dec2deg(dectuple)
     Returns decimal degree form of declination DECdeg given dectuple=(degrees, minutes,
     seconds).
@@ -34,8 +34,6 @@ def dec2deg(dectuple)
     return(DECdeg)
     
 # Julian days and MJD
-
-<<<<<<< HEAD
 def julday(y, m, d, h, mi, s):
     ''' [JDay] = julday(y, m, d, h, mi, s)
     JDay is decimal Julian day number given year y, month m, day d, hour h, minutes mi,
@@ -67,7 +65,6 @@ def mJulDay(y, m, d, h, mi, s):
     return(mJDay)
         
 # gmt to gst
-=======
 # find number of days between 1/1 and today
 def numDaysFromJan(y,m,d):
 	x=0
@@ -90,7 +87,6 @@ def numDaysFromJan(y,m,d):
 				x+=30
 		m -= 1
 	return x+d
->>>>>>> refs/remotes/origin/master
 
 # gmt to gst functions below
 # calculate constant B
