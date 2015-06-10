@@ -30,11 +30,15 @@ def decToDeg(d,m,s):
     Returns decimal degree form of declination DECdeg given dectuple=(degrees, minutes,
     seconds).
     KH, 6/8/15
+    
+    Changed to use np.sign and np.abs
+    EFY, 6/10/2015
     '''
-    if d < 0:
-        DECdeg = d - (m/60.) - (s/(60.*60.))
-    else:
-        DECdeg = d + (m/60.) + (s/(60.*60.))
+    DECdeg = np.sign(d) * (np.abs(d) + m/60. + s/3600.)
+    #if d < 0:
+    #    DECdeg = d - (m/60.) - (s/(60.*60.))
+    #else:
+    #    DECdeg = d + (m/60.) + (s/(60.*60.))
     return(DECdeg)
     
 # Julian days and MJD
