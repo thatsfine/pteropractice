@@ -4,6 +4,10 @@ import numpy as np
 def degToRad(deg):
     return (deg*((np.pi)/180.))
 
+#Radian to decimal degrees function
+def radToDeg(rad):
+    return (rad*(180./(np.pi)))
+
 # Decimal hours to h::m::s
 def decHrToHMS(hrs):
     return (hrs//1, ((hrs%1)*60)//1, ((((hrs%1)*60.)%1)*60))
@@ -162,10 +166,10 @@ def eq2hor(gmt, rA, lat, dec):
     #rA (hours, minutes, seconds), latitude lat, and declination in decimal degrees dec.
     #CYC 6/08/15
     
-   hourAng = hourAng(gmt, rA) #calculates hour angle
-   deg_hourAng=15*hourAng #converts hour angle to degrees
-   sinAlt=sin(dec)*sin(lat) + cos(dec)*cos(lat)*cos(deg_hourAng)
-   alt = np.arcsin(sinAlt) #outputs altitude
-   cosAz = (sin(dec)-sin(lat)*sin(alt))/(cos(lat)*cos(alt))
-   az = np.arccos(cosAz) #outputs azimuth
-   return (alt, az) #returns altitude, azimuth as a tuple
+    hourAng = hourAng(gmt, rA) #calculates hour angle
+    deg_hourAng=radToDeg(hourAng) #converts hour angle to degrees
+    sinAlt=sin(dec)*sin(lat) + cos(dec)*cos(lat)*cos(deg_hourAng)
+    alt = np.arcsin(sinAlt) #outputs altitude
+    cosAz = (sin(dec)-sin(lat)*sin(alt))/(cos(lat)*cos(alt))
+    az = np.arccos(cosAz) #outputs azimuth
+    return (alt, az) #returns altitude, azimuth as a tuple
