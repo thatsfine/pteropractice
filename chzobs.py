@@ -4,9 +4,18 @@ import numpy as np
 def degToRad(deg):
     return (deg*((np.pi)/180.))
 
+#Radian to decimal degrees function
+def radToDeg(rad):
+    return (rad*(180./(np.pi)))
+
 # Decimal hours to h::m::s
-def decHrsToHMS(hrs):
-    return (hrs//1, ((hrs%1)*60)//1, ((((hrs%1)*60.)%1)*60)//1)
+def decHrToHMS(hrs):
+    return (hrs//1, ((hrs%1)*60)//1, ((((hrs%1)*60.)%1)*60))
+
+# h:m:s to decimal hr
+def hmsToDecHr(h,m,s):
+    return (h+(m/60.)+(s/3600.))
+
 
 # conversions to decimal form
 def hmsToDday(d, h, m, s):
@@ -76,8 +85,10 @@ def hourAng(gmt, rA):
     as rA & returns the hour angle.
     ACR 6/8/15
     '''
-    rAh, rAm, rAs = rA
-    hrAng = gmtToLST(gmt) - hmsToRadians(rAh, rAm, rAs)  #use decimal hours instead of rad?
+    (rAh, rAm, rAs) = rA
+    decHr = hmsToDecHr(rAh, rAm, rAs)
+    degRA = 360 * (decHr/24.)
+    hrAng = gmtToLST(gmt) - degToRad(degRA)
     return hrAng
 
 
@@ -86,70 +97,67 @@ def hourAng(gmt, rA):
 
 # finds number of days between 1/1 and today, prep for gmtToGST
 def numDaysFromJan(y,m,d):
-	x=0
-	m-=1
-	while(m>0):
-		if (m==2):
-			if(y%4==0):
-				x+=29
-			else:
-				x+=28
-		elif (m%2==1):
-			if (m>7):
-				x+=30
-			if (m<=7):
-				x+=31
-		elif (m%2==0):
-			if (m>7):
-				x+=31
-			if (m<=7):
-				x+=30
-		m -= 1
-	return x+d
+    x=0
+    m-=1
+    while(m>0):
+        if (m==2):
+            if(y%4==0):
+                x+=29
+            else:
+                x+=28
+        elif (m%2==1):
+            if (m>7):
+                x+=30
+            if (m<=7):
+                x+=31
+        elif (m%2==0):
+                if (m>7):
+                    x+=31
+                if (m<=7):
+                    x+=30
+        m -= 1
+    return x+d
 
 # gmt to gst functions below
 # calculate constant B
-def getB(y,m,d,h,mn,s):
-	jd=julDay(y, m, d, h, mn, s)
-	t=(jd-2415020)/36525
-	r=6.6460656+(2400.051262*t)+(0.00002581*(t**2))
-	u=r-(24*(y-1900))
-	return 24-u
+def getB(y):
+    jd=julDay(y, 1, 0, 0, 0, 0)
+    t=(jd-2415020)/36525.
+    r=6.6460656+(2400.051262*t)+(0.00002581*(t**2))
+    u=r-(24.*(y-1900))
+    return 24-u
 
 # from gmt to gst
-def gmtToGST (y,m,d,h,mn,s):
-	a=0.0657098
-	b=getB(y,m,d,h,mn,s)
-	c=1.002738
-	d=0.997270
-	fromJan=numDaysFromJan(y,m,d)
-	tZero=days*a-b
-	gmtDec=h+m/60+s/3600
-	ans=tZero+gmtDec*c
-	if(ans>24):
-		ans-=24
-	elif(ret<0):
-		ans+=24
-	return decHrsToHMS(ans)
+# returns answer in decimal hrs
+def gmtToGST (y,m,dy,h,mn,s):
+    a=0.0657098
+    b=getB(y)
+    c=1.002738
+    d=0.997270
+    fromJan=numDaysFromJan(y,m,dy)
+    tZero=fromJan*a-b
+    gmtDec=h+mn/60.+s/3600.
+    ans=tZero+gmtDec*c
+    if(ans>24):
+        ans-=24
+    elif(ans<0):
+        ans+=24
+    return ans
 
 # gmt to lst (calls prev) Note: lst = RA + hour angle
+# returns answer in decimal hrs
 def gmtToLST (y,m,d,h,mn,s,dir,deg):
-	(gsH, gsM, gsS) = gmtToGST(y,m,d,h,mn,s)
-	decGST=gsH+gsM/60+gsS/60
-	degHrs=deg/15
-	if(dir=="W"):
-		decGST-=degHrs
-	elif(dir=="E"):
-		decGST-degHrs
-	if(decGST>24):
-		decGST-=24
-	elif(decGST<0):
-		decGST+=24
-	return decGST
-
-# h:m:s to decimal hr
-def hmsToDecHr(h,m,s):
-    return (h+(m/60.)+(s/3600.))
+    decGST= gmtToGST(y,m,d,h,mn,s)
+    degHrs=deg/15.
+    if(dir=="W"):
+        decGST=decGST-degHrs
+    elif(dir=="E"):
+        decGST=decGST+degHrs
+    if(decGST>24):
+        decGST-=24
+    elif(decGST<0):
+        decGST+=24
+    return decGST
 
 # eq to horiz coord conversion
 def eq2hor(gmt, rA, lat, dec):
@@ -158,10 +166,10 @@ def eq2hor(gmt, rA, lat, dec):
     #rA (hours, minutes, seconds), latitude lat, and declination in decimal degrees dec.
     #CYC 6/08/15
     
-   hourAng = hourAng(gmt, rA) #calculates hour angle
-   deg_hourAng=15*hourAng #converts hour angle to degrees
-   sinAlt=sin(dec)*sin(lat) + cos(dec)*cos(lat)*cos(deg_hourAng)
-   alt = np.arcsin(sinAlt) #outputs altitude
-   cosAz = (sin(dec)-sin(lat)*sin(alt))/(cos(lat)*cos(alt))
-   az = np.arccos(cosAz) #outputs azimuth
-   return (alt, az) #returns altitude, azimuth as a tuple
+    hourAng = hourAng(gmt, rA) #calculates hour angle
+    deg_hourAng=radToDeg(hourAng) #converts hour angle to degrees
+    sinAlt=sin(dec)*sin(lat) + cos(dec)*cos(lat)*cos(deg_hourAng)
+    alt = np.arcsin(sinAlt) #outputs altitude
+    cosAz = (sin(dec)-sin(lat)*sin(alt))/(cos(lat)*cos(alt))
+    az = np.arccos(cosAz) #outputs azimuth
+    return (alt, az) #returns altitude, azimuth as a tuple
