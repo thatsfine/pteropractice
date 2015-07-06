@@ -5,6 +5,8 @@ def degToRad(deg):
     return (deg*((np.pi)/180.))
 
 #Radian to decimal degrees function
+#pre - input is in radians
+#post - degree representation
 def radToDeg(rad):
     return (rad*(180./(np.pi)))
 
