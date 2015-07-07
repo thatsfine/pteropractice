@@ -198,15 +198,8 @@ def apPhot(im, xg, yg, fwhm, apR, inR, outR):
     mn, sd = robomad(im, thresh)
     im2 = im - mn
     
-    # STEP 1: Get a better centroid.
-<<<<<<< HEAD
+    # STEP 1: Get a better centroid.    
     xc, yc = cntrd(im2, fwhm, xg, yg)
-    
-=======
-    # xc, yc = gcntrd(im2, fwhm, xg, yg)
-    xc, yc = cntrd(im2, fwhm, xg, yg)
->>>>>>> 89b70e42af765a5ec74e9fb268cf1a1ffa5fade6
-    #print "Found centers at x,y = ", xc, yc    
     
     # STEP 2: Now make the aperture mask using pixwt()
     sf = 10.0
