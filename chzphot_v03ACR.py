@@ -486,3 +486,115 @@ def robostack(stk, sigthresh, gain):
     
 
 #-----------------------------------------------------
+
+def brobosolve(im, dims, thresh, medWin,avgR,test):
+	'''Produces linear field solution for background gradient of first, second or third order.  Arguments: an image "im", desired degree of solution "dims" (1,2 or 3), desired standard deviation "thresh", window size for the median filter "medWin", and a reasonable guess in pixels for the avg star radius in the frame "avgR" -- DET "test" TO ZERO.  Returns tuple of the following form: ('Constant:',A1,'A2*x:',A2,'A3*y:',A3, . . . 'A10*x*y^2:',A10) ACR 7/7/15'''
+	
+	npts = len(im) - medWin*2
+	subIm = im[medWin:len(im)-medWin,medWin:len(im)-medWin]
+	im1 = copy(im)
+	
+	#Find star centers, hot pixels etc., scoop them out; next find a value from a nearby #(non star location) and use that value as the mean to produce a replacement value for #the deleted pixel.
+	
+	import numpy
+	mn,std = robomad(im,thresh)
+	starpix = where(im > mn+std*thresh)
+	
+	#The approach here could be improved significantly, but what it does is find nearby values to each star center that can be used to 'fill the crater' (check in imshow)
+	
+	try:
+			nearVal = im[starpix[0]+avgR,starpix[1]+avgR]
+	except:
+    		nearVal = im[starpix[0]-avgR,starpix[1]-avgR]
+	im1[starpix] = medfilt(nearVal,medWin)
+	
+	#Constructs F Matrix for desired output degree
+	
+	y,x = indices((npts,npts))
+	if test == 1:
+		y,x = y+medWin,x+medWin
+	
+	x1d=ravel(x)
+	y1d=ravel(y)
+	
+	if dims == 1:
+		FMAT = zeros((npts*npts,3))
+		FMAT[:,0] = 1.0
+		FMAT[:,1] = x1d*1.
+		FMAT[:,2] = y1d*1.
+	elif dims == 2:
+		FMAT = zeros((npts*npts,6))
+		FMAT[:,0] = 1.0
+		FMAT[:,1] = x1d*1.
+		FMAT[:,2] = y1d*1.
+		FMAT[:,3] = x1d**2.
+		FMAT[:,4] = y1d**2.
+		FMAT[:,5] = x1d*y1d*1.
+	else:
+		FMAT = zeros((npts*npts,10))
+		FMAT[:,0] = 1.0
+		FMAT[:,1] = x1d*1.
+		FMAT[:,2] = y1d*1.
+		FMAT[:,3] = x1d**2.
+		FMAT[:,4] = y1d**2.
+		FMAT[:,5] = x1d*y1d*1.
+		FMAT[:,6] = x1d**3.
+		FMAT[:,7] = y1d**3.
+		FMAT[:,8] = x1d*y1d**2.
+		FMAT[:,9] = y1d*x1d**2.
+		
+	#In order to be robust against stars we median filter the image; we then cut off the #borders where medfilt gets confused.
+		
+	iMF = medfilt(im1,medWin)
+	subiMF = iMF[medWin:len(im)-medWin,medWin:len(im)-medWin]
+	
+	#Conducts wizardry giving us a first approximation of parameter values (housed in p)
+	
+	subiMFR = ravel(subiMF)
+	imR = ravel(subIm)
+	p = lstsq(FMAT,subiMFR)[0]
+	
+	#Finds pixels that are NOT stars 
+	
+	resid = imR - numpy.dot(FMAT,p)
+	mResid, sdResid = robomad(resid,thresh)
+	gdPix = abs(resid)<(mResid + thresh*sdResid)
+	
+	#Producing F Matrix 2 for better approximation
+	
+	if dims == 1:
+		FMAT2 = zeros((len(x1d[gdPix]),3))
+		FMAT2[:,0] = 1.0
+		FMAT2[:,1] = x1d[gdPix]*1.
+		FMAT2[:,2] = y1d[gdPix]*1.
+	elif dims == 2:
+		FMAT2 = zeros((len(x1d[gdPix]),6))
+		FMAT2[:,0] = 1.0
+		FMAT2[:,1] = x1d[gdPix]*1.
+		FMAT2[:,2] = y1d[gdPix]*1.
+		FMAT2[:,3] = x1d[gdPix]**2.
+		FMAT2[:,4] = y1d[gdPix]**2.
+		FMAT2[:,5] = x1d[gdPix]*y1d[gdPix]*1.
+	else:
+		FMAT2 = zeros((len(x1d[gdPix]),10))
+		FMAT2[:,0] = 1.0
+		FMAT2[:,1] = x1d[gdPix]*1.
+		FMAT2[:,2] = y1d[gdPix]*1.
+		FMAT2[:,3] = x1d[gdPix]**2.
+		FMAT2[:,4] = y1d[gdPix]**2.
+		FMAT2[:,5] = x1d[gdPix]*y1d[gdPix]*1.
+		FMAT2[:,6] = x1d[gdPix]**3.
+		FMAT2[:,7] = y1d[gdPix]**3.
+		FMAT2[:,8] = x1d[gdPix]*y1d[gdPix]**2.
+		FMAT2[:,9] = y1d[gdPix]*x1d[gdPix]**2.
+	
+	p2 = lstsq(FMAT2,imR[gdPix])[0]
+	
+	if dims == 1:
+		return(('Constant:', p2[0] , 'a2*x:' , p2[1] , 'a3*y:' , p2[2]))
+	if dims == 2:
+		return(('Constant:', p2[0] , 'a2*x:' , p2[1] , 'a3*y:' , p2[2] , 'a4*x^2:' ,  p2[3] , 'a5*y^2:' , p2[4] , 'a6*x*y:' , p2[5]))
+	if dims == 3:
+		return(('Constant:', p2[0] , 'a2*x:' , p2[1] , 'a3*y:' , p2[2] , 'a4*x^2:' ,  p2[3] , 'a5*y^2:' , p2[4] , 'a6*x*y:' , p2[5] , 'a7*x^3:' , p2[6] , 'a8*y^3:' , p2[7] , 'a9*x*y^2:' , p2[8] , 'a10*y*x^2:' , p2[9]))
+	
+
