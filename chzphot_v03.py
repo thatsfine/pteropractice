@@ -79,26 +79,6 @@ def parcntrd(im, subR, xg, yg):
 
 #-----------------------------------------------------
 
-def rebin(a, *args):
-    '''rebin ndarray data into a smaller ndarray of the same rank whose dimensions
-    are factors of the original dimensions. eg. An array with 6 columns and 4 rows
-    can be reduced to have 6,3,2 or 1 columns and 4,2 or 1 rows.
-    example usages:
-    >>> a=rand(6,4); b=rebin(a,3,2)
-    >>> a=rand(6); b=rebin(a,2)
-    '''
-    shape = a.shape
-    lenShape = len(shape)
-    factor = asarray(shape)/asarray(args)
-    evList = ['a.reshape('] + \
-             ['args[%d],factor[%d],'%(i,i) for i in range(lenShape)] + \
-             [')'] + ['.sum(%d)'%(i+1) for i in range(lenShape)] + \
-             ['/factor[%d]'%i for i in range(lenShape)]
-    print ''.join(evList)
-    return eval(''.join(evList))
-
-#-----------------------------------------------------
-
 def cntrd(im, subR, xg, yg):
     '''Finds more exact coordinates of a star center by calculating signal-weighted x & y moments'''
     
@@ -107,7 +87,7 @@ def cntrd(im, subR, xg, yg):
     
     # Step 2: Calculate the signal-weighted x and y moments
     (yi,xi) = indices((2*subR,2*subR))
-
+    
     yc = sum(yi*sf)/sum(sf)
     xc = sum(xi*sf)/sum(sf)
     
@@ -507,8 +487,8 @@ def robostack(stk, sigthresh, gain):
 
 #-----------------------------------------------------
 
-def brobosolve(im, dims, thresh, medWin,avgR,test):
-	'''Produces linear field solution for background gradient of first, second or third order.  Arguments: an image "im", desired degree of solution "dims" (1,2 or 3), desired standard deviation "thresh", window size for the median filter "medWin", and a reasonable guess in pixels for the avg star radius in the frame "avgR" -- DET "test" TO ZERO.  Returns tuple of the following form: ('Constant:',A1,'A2*x:',A2,'A3*y:',A3, . . . 'A10*x*y^2:',A10) ACR 7/7/15'''
+def brobosolve(im, dims, thresh, medWin,avgR):
+	'''Produces linear field solution for background gradient of first, second or third order.  Arguments: an image "im", desired degree of solution "dims" (1,2 or 3), desired standard deviation "thresh", window size for the median filter "medWin", and a reasonable guess in pixels for the avg star radius in the frame "avgR".   Returns tuple of the following form: ('Constant:',A1,'A2*x:',A2,'A3*y:',A3, . . . 'A10*x*y^2:',A10) ACR 7/7/15'''
 	
 	npts = len(im) - medWin*2
 	subIm = im[medWin:len(im)-medWin,medWin:len(im)-medWin]
@@ -520,8 +500,7 @@ def brobosolve(im, dims, thresh, medWin,avgR,test):
 	mn,std = robomad(im,thresh)
 	starpix = where(im > mn+std*thresh)
 	
-	#The approach here could be improved significantly, but what it does is find nearby values to each star center that can be used to 'fill the crater' (check in imshow)
-	
+	#The approach here could be improved significantly, but what it does is find nearby values #to each star center that can be used to 'fill the crater' (check in imshow)
 	try:
 			nearVal = im[starpix[0]+avgR,starpix[1]+avgR]
 	except:
@@ -531,9 +510,6 @@ def brobosolve(im, dims, thresh, medWin,avgR,test):
 	#Constructs F Matrix for desired output degree
 	
 	y,x = indices((npts,npts))
-	if test == 1:
-		y,x = y+medWin,x+medWin
-	
 	x1d=ravel(x)
 	y1d=ravel(y)
 	
