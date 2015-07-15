@@ -108,6 +108,9 @@ def cntrd(im, subR, xg, yg):
     # Step 2: Calculate the signal-weighted x and y moments
     (yi,xi) = indices((2*subR,2*subR))
 
+    # if the subframe's shape is not equal to the dims of yi,xi
+    # then reduce yi and xi to the shape of the subframe
+
     yc = sum(yi*sf)/sum(sf)
     xc = sum(xi*sf)/sum(sf)
     
