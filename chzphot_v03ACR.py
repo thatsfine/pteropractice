@@ -108,6 +108,9 @@ def cntrd(im, subR, xg, yg):
     # Step 2: Calculate the signal-weighted x and y moments
     (yi,xi) = indices((2*subR,2*subR))
 
+    # if the subframe's shape is not equal to the dims of yi,xi
+    # then reduce yi and xi to the shape of the subframe
+
     yc = sum(yi*sf)/sum(sf)
     xc = sum(xi*sf)/sum(sf)
     
@@ -522,11 +525,12 @@ def brobosolve(im, dims, thresh, medWin,avgR,test):
 	
 	#The approach here could be improved significantly, but what it does is find nearby values to each star center that can be used to 'fill the crater' (check in imshow)
 	
-	try:
-			nearVal = im[starpix[0]+avgR,starpix[1]+avgR]
-	except:
-    		nearVal = im[starpix[0]-avgR,starpix[1]-avgR]
-	im1[starpix] = medfilt(nearVal,medWin)
+	
+    #try:
+#			nearVal = im[starpix[0]+avgR,starpix[1]+avgR]
+#	except:
+#    		nearVal = im[starpix[0]-avgR,starpix[1]-avgR]
+#	im1[starpix] = medfilt(nearVal,medWin)
 	
 	#Constructs F Matrix for desired output degree
 	
