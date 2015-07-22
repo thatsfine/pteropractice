@@ -525,11 +525,12 @@ def brobosolve(im, dims, thresh, medWin,avgR,test):
 	
 	#The approach here could be improved significantly, but what it does is find nearby values to each star center that can be used to 'fill the crater' (check in imshow)
 	
-	try:
-			nearVal = im[starpix[0]+avgR,starpix[1]+avgR]
-	except:
-    		nearVal = im[starpix[0]-avgR,starpix[1]-avgR]
-	im1[starpix] = medfilt(nearVal,medWin)
+	
+    #try:
+#			nearVal = im[starpix[0]+avgR,starpix[1]+avgR]
+#	except:
+#    		nearVal = im[starpix[0]-avgR,starpix[1]-avgR]
+#	im1[starpix] = medfilt(nearVal,medWin)
 	
 	#Constructs F Matrix for desired output degree
 	
